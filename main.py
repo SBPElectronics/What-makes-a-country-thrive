@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, Menu
-from data_downloader import PopulationApp, GDPApp  # Import both apps
+from data_downloader import LifeApp, WealthApp, EducationApp, InternetApp, PollutionApp, PopulationApp  # Import both apps
 from explore import open_dataset  # Import the function from explore.py
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -66,7 +66,7 @@ class TheDataAnalyser:
 
     def open_single_data_app(self):
         new_window = tk.Toplevel(self.root)
-        PopulationApp(new_window)  # Open population data, or you could switch to GDPApp based on input
+        LifeApp(new_window)  # Open population data, or you could switch to GDPApp based on input
 
     def open_both_data_app(self):
         new_window = tk.Toplevel(self.root)
