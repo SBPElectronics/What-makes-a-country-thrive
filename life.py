@@ -6,19 +6,23 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from PIL import Image, ImageTk
 import io
 
-df = pd.read_csv("life.csv")
-latest = df.sort_values("Year").groupby("Country").tail(1)
-countries = sorted(latest["Country"].unique())
+# ---------------- LOAD DATA ---------------- #
 
+df = pd.read_csv("life.csv")
+
+# Clean column names (IMPORTANT)
+df.columns = df.columns.str.strip()
+
+years = sorted(df["Year"].unique())
+
+# ---------------- GRAPH FUNCTION ---------------- #
 
 def show_graph(data, title):
     names = list(data["Country"])
-    values = list(data["Life expectancy "])
+    values = list(data["Life expectancy"])
     n = len(names)
 
-    # Force large height so each label gets space
-    fig_height = n * 0.45   # increase to 0.5 if still tight
-
+    fig_height = n * 0.45  # forces spacing between labels
     fig, ax = plt.subplots(figsize=(12, fig_height))
 
     ax.barh(range(n), values)
@@ -28,17 +32,15 @@ def show_graph(data, title):
     ax.set_xlabel("Life Expectancy")
     ax.set_title(title)
 
-    # Make room for long country names
-    plt.subplots_adjust(left=0.35)
-
+    plt.subplots_adjust(left=0.35)  # space for long country names
     plt.tight_layout()
 
-    # Convert figure to image
+    # Convert to image for Tkinter scrolling
     buf = io.BytesIO()
     FigureCanvasAgg(fig).print_png(buf)
     buf.seek(0)
-    img = Image.open(buf)
 
+    img = Image.open(buf)
     plt.close(fig)
 
     img_tk = ImageTk.PhotoImage(img)
@@ -46,62 +48,129 @@ def show_graph(data, title):
     graph_canvas.delete("all")
     graph_canvas.image = img_tk
     graph_canvas.create_image(0, 0, anchor="nw", image=img_tk)
-
     graph_canvas.config(scrollregion=(0, 0, img.width, img.height))
 
 
+# ---------------- FILTERING LOGIC ---------------- #
+
+def get_filtered_data():
+    year = int(year_var.get())
+    sort_option = sort_var.get()
+
+    filtered = df[df["Year"] == year]
+
+    if sort_option == "Highest to Lowest":
+        filtered = filtered.sort_values("Life expectancy", ascending=False)
+    elif sort_option == "Lowest to Highest":
+        filtered = filtered.sort_values("Life expectancy", ascending=True)
+
+    return filtered
+
+
 def show_all():
-    sorted_data = latest.sort_values("Life expectancy ")
-    show_graph(sorted_data, "Life Expectancy by Country")
+    filtered = get_filtered_data()
+    show_graph(filtered, f"Life Expectancy by Country ({year_var.get()})")
 
 
 def show_selected():
-    selected = [countries[i] for i in country_listbox.curselection()]
+    selected = country_listbox.curselection()
     if not selected:
         return
-    filtered = latest[latest["Country"].isin(selected)].sort_values("Life expectancy ")
-    show_graph(filtered, "Life Expectancy (Selected Countries)")
+
+    selected_names = [country_listbox.get(i) for i in selected]
+    filtered = get_filtered_data()
+    filtered = filtered[filtered["Country"].isin(selected_names)]
+
+    show_graph(filtered, f"Selected Countries ({year_var.get()})")
+
+
+# ---------------- SEARCH FILTER ---------------- #
+
+def update_country_list(event=None):
+    search_term = search_var.get().lower()
+    country_listbox.delete(0, tk.END)
+
+    filtered = df[df["Year"] == int(year_var.get())]["Country"].unique()
+
+    for country in sorted(filtered):
+        if search_term in country.lower():
+            country_listbox.insert(tk.END, country)
 
 
 # ---------------- GUI ---------------- #
+
 root = tk.Tk()
-root.title("Life Expectancy Viewer")
-root.geometry("900x700")
+root.title("Life Expectancy Dashboard")
+root.geometry("1000x750")
 
-title_label = tk.Label(root, text="Life Expectancy Dashboard", font=("Arial", 18))
-title_label.pack(pady=10)
+tk.Label(root, text="Life Expectancy Dashboard", font=("Arial", 18)).pack(pady=10)
 
-buttons_frame = tk.Frame(root)
-buttons_frame.pack()
+# --- Controls Frame ---
+controls = tk.Frame(root)
+controls.pack(pady=5)
 
-tk.Button(buttons_frame, text="Show All Countries", command=show_all).pack(side="left", padx=10)
-tk.Button(buttons_frame, text="Show Selected", command=show_selected).pack(side="left", padx=10)
+# Year Selector
+tk.Label(controls, text="Select Year:").grid(row=0, column=0)
+year_var = tk.StringVar(value=str(years[-1]))
+year_menu = ttk.Combobox(controls, textvariable=year_var, values=years, width=8)
+year_menu.grid(row=0, column=1)
+year_menu.bind("<<ComboboxSelected>>", update_country_list)
 
-# --- Country list with scrollbar ---
-frame = tk.Frame(root)
-frame.pack(pady=10)
+# Sort Selector
+tk.Label(controls, text="Sort:").grid(row=0, column=2)
+sort_var = tk.StringVar(value="Highest to Lowest")
+sort_menu = ttk.Combobox(
+    controls,
+    textvariable=sort_var,
+    values=["Highest to Lowest", "Lowest to Highest"],
+    width=20
+)
+sort_menu.grid(row=0, column=3)
 
-scrollbar = tk.Scrollbar(frame)
+# Search Bar
+tk.Label(controls, text="Search Country:").grid(row=0, column=4)
+search_var = tk.StringVar()
+search_entry = tk.Entry(controls, textvariable=search_var)
+search_entry.grid(row=0, column=5)
+search_entry.bind("<KeyRelease>", update_country_list)
+
+# --- Buttons ---
+btn_frame = tk.Frame(root)
+btn_frame.pack(pady=10)
+
+tk.Button(btn_frame, text="Show All Countries", command=show_all).pack(side="left", padx=5)
+tk.Button(btn_frame, text="Show Selected Countries", command=show_selected).pack(side="left", padx=5)
+
+# --- Country List ---
+list_frame = tk.Frame(root)
+list_frame.pack(pady=10)
+
+scrollbar = tk.Scrollbar(list_frame)
 scrollbar.pack(side="right", fill="y")
 
-country_listbox = tk.Listbox(frame, selectmode="multiple", width=40, height=15, yscrollcommand=scrollbar.set)
+country_listbox = tk.Listbox(
+    list_frame,
+    width=45,
+    height=15,
+    selectmode="multiple",
+    yscrollcommand=scrollbar.set
+)
+
 scrollbar.config(command=country_listbox.yview)
-
-for c in countries:
-    country_listbox.insert(tk.END, c)
-
 country_listbox.pack(side="left")
 
-# --- SCROLLABLE GRAPH AREA ---
+update_country_list()
+
+# --- Scrollable Graph Area ---
 graph_frame = tk.Frame(root)
 graph_frame.pack(fill="both", expand=True)
 
 graph_canvas = tk.Canvas(graph_frame, bg="white")
 graph_canvas.pack(side="left", fill="both", expand=True)
 
-graph_scrollbar = tk.Scrollbar(graph_frame, orient="vertical", command=graph_canvas.yview)
-graph_scrollbar.pack(side="right", fill="y")
+graph_scroll = tk.Scrollbar(graph_frame, orient="vertical", command=graph_canvas.yview)
+graph_scroll.pack(side="right", fill="y")
 
-graph_canvas.config(yscrollcommand=graph_scrollbar.set)
+graph_canvas.config(yscrollcommand=graph_scroll.set)
 
 root.mainloop()
