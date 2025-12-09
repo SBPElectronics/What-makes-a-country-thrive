@@ -6,7 +6,6 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from PIL import Image, ImageTk
 import io
 
-# ---------------- LOAD DATA ---------------- #
 
 df = pd.read_csv("life.csv")
 
@@ -15,7 +14,7 @@ df.columns = df.columns.str.strip()
 
 years = sorted(df["Year"].unique())
 
-# ---------------- GRAPH FUNCTION ---------------- #
+
 
 def show_graph(data, title):
     names = list(data["Country"])
@@ -59,9 +58,9 @@ def get_filtered_data():
 
     filtered = df[df["Year"] == year]
 
-    if sort_option == "Highest to Lowest":
+    if sort_option == "Lowest to Highest":
         filtered = filtered.sort_values("Life expectancy", ascending=False)
-    elif sort_option == "Lowest to Highest":
+    elif sort_option == "Highest to Lowest":
         filtered = filtered.sort_values("Life expectancy", ascending=True)
 
     return filtered
