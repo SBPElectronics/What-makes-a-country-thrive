@@ -1,12 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, Menu
-<<<<<<< HEAD
-#from data_downloader import PopulationApp, GDPApp  # Import both apps
-#from explore import open_dataset  # Import the function from explore.py
-=======
-from data_downloader import LifeApp, WealthApp, EducationApp, InternetApp, PollutionApp, PopulationApp  # Import both apps
-from explore import open_dataset  # Import the function from explore.py
->>>>>>> a6c9f706cec9995ed0f74b664a9dbf28f3550e10
+
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
