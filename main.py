@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, Menu
 from data_downloader import PopulationApp  # Import both apps
+from life import life_expectancy_app  # Import life expectancy app
 from explore import open_dataset  # Import the function from explore.py
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -42,8 +43,8 @@ class TheDataAnalyser:
         self.single_data_button = tk.Button(
             self.main_frame,
             text="See GDP or Population of a Country",
-            bg="blue",
-            fg="white",
+            bg="green",
+            fg="black",
             command=self.open_single_data_app
         )
         self.single_data_button.pack(fill="x", expand=True)
@@ -58,6 +59,16 @@ class TheDataAnalyser:
         )
         self.both_data_button.pack(fill="x", expand=True)
 
+        # Button to see Life Expectancy of a country
+        self.life_expectancy_button = tk.Button(
+            self.main_frame,
+            text="See Life Expectancy of a Country",
+            bg="green",
+            fg="black",
+            command=self.open_life_expectancy_app
+        )
+        self.life_expectancy_button.pack(fill="x", expand=True)
+
         # Pass 'root' when calling open_dataset
         self.dataset_button = tk.Button(self.main_frame, text="Open Dataset", command=lambda: open_dataset(root),
                                         bg="green",
@@ -71,6 +82,11 @@ class TheDataAnalyser:
     def open_both_data_app(self):
         new_window = tk.Toplevel(self.root)
         BothDataApp(new_window)  # Open a new window to view both GDP and Population data
+    
+    def open_life_expectancy_app(self):
+        new_window = tk.Toplevel(self.root)
+        life_expectancy_app(new_window)
+
 
 class BothDataApp:
     """Class to view both GDP and Population for a single country"""

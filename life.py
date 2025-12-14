@@ -6,170 +6,93 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg
 from PIL import Image, ImageTk
 import io
 
+class life_expectancy_app:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Life Expectancy Dashboard")
+        self.root.geometry("1000x750")
 
-df = pd.read_csv("life.csv")
+        self.df = pd.read_csv("life.csv")
+        self.df.columns = self.df.columns.str.strip()
+        self.years = sorted(self.df["Year"].unique())
 
-# Clean column names (IMPORTANT)
-df.columns = df.columns.str.strip()
+        self.build_gui()
+        self.update_country_list()
 
-years = sorted(df["Year"].unique())
+    def build_gui(self):
+        tk.Label(self.root, text="Life Expectancy Dashboard", font=("Arial", 18)).pack(pady=10)
 
+        controls = tk.Frame(self.root)
+        controls.pack(pady=5)
 
+        self.year_var = tk.StringVar(value=str(self.years[-1]))
+        self.sort_var = tk.StringVar(value="Highest to Lowest")
+        self.search_var = tk.StringVar()
 
-def show_graph(data, title):
-    names = list(data["Country"])
-    values = list(data["Life expectancy"])
-    n = len(names)
+        ttk.Combobox(controls, textvariable=self.year_var, values=self.years, width=8).grid(row=0, column=1)
+        ttk.Combobox(
+            controls,
+            textvariable=self.sort_var,
+            values=["Highest to Lowest", "Lowest to Highest"],
+            width=20
+        ).grid(row=0, column=3)
 
-    fig_height = n * 0.45  # forces spacing between labels
-    fig, ax = plt.subplots(figsize=(12, fig_height))
+        self.search_entry = tk.Entry(controls, textvariable=self.search_var)
+        self.search_entry.grid(row=0, column=5)
+        self.search_entry.bind("<KeyRelease>", self.update_country_list)
 
-    ax.barh(range(n), values)
-    ax.set_yticks(range(n))
-    ax.set_yticklabels(names, fontsize=10)
+        self.country_listbox = tk.Listbox(self.root, width=45, height=15, selectmode="multiple")
+        self.country_listbox.pack(pady=10)
 
-    ax.set_xlabel("Life Expectancy")
-    ax.set_title(title)
+        tk.Button(self.root, text="Show All Countries", command=self.show_all).pack()
+        tk.Button(self.root, text="Show Selected Countries", command=self.show_selected).pack()
 
-    plt.subplots_adjust(left=0.35)  # space for long country names
-    plt.tight_layout()
+        self.graph_canvas = tk.Canvas(self.root, bg="white")
+        self.graph_canvas.pack(fill="both", expand=True)
 
-    # Convert to image for Tkinter scrolling
-    buf = io.BytesIO()
-    FigureCanvasAgg(fig).print_png(buf)
-    buf.seek(0)
+    def get_filtered_data(self):
+        year = int(self.year_var.get())
+        filtered = self.df[self.df["Year"] == year]
 
-    img = Image.open(buf)
-    plt.close(fig)
+        if self.sort_var.get() == "Lowest to Highest":
+            filtered = filtered.sort_values("Life expectancy")
+        else:
+            filtered = filtered.sort_values("Life expectancy", ascending=False)
 
-    img_tk = ImageTk.PhotoImage(img)
+        return filtered
 
-    graph_canvas.delete("all")
-    graph_canvas.image = img_tk
-    graph_canvas.create_image(0, 0, anchor="nw", image=img_tk)
-    graph_canvas.config(scrollregion=(0, 0, img.width, img.height))
+    def show_all(self):
+        self.show_graph(self.get_filtered_data(), "Life Expectancy by Country")
 
+    def show_selected(self):
+        selected = self.country_listbox.curselection()
+        if not selected:
+            return
 
-# ---------------- FILTERING LOGIC ---------------- #
+        names = [self.country_listbox.get(i) for i in selected]
+        data = self.get_filtered_data()
+        self.show_graph(data[data["Country"].isin(names)], "Selected Countries")
 
-def get_filtered_data():
-    year = int(year_var.get())
-    sort_option = sort_var.get()
+    def update_country_list(self, event=None):
+        self.country_listbox.delete(0, tk.END)
+        year = int(self.year_var.get())
+        countries = self.df[self.df["Year"] == year]["Country"].unique()
 
-    filtered = df[df["Year"] == year]
+        for c in sorted(countries):
+            if self.search_var.get().lower() in c.lower():
+                self.country_listbox.insert(tk.END, c)
 
-    if sort_option == "Lowest to Highest":
-        filtered = filtered.sort_values("Life expectancy", ascending=False)
-    elif sort_option == "Highest to Lowest":
-        filtered = filtered.sort_values("Life expectancy", ascending=True)
+    def show_graph(self, data, title):
+        fig, ax = plt.subplots(figsize=(10, len(data) * 0.4))
+        ax.barh(data["Country"], data["Life expectancy"])
+        ax.set_title(title)
 
-    return filtered
+        buf = io.BytesIO()
+        FigureCanvasAgg(fig).print_png(buf)
+        buf.seek(0)
+        img = ImageTk.PhotoImage(Image.open(buf))
+        plt.close(fig)
 
-
-def show_all():
-    filtered = get_filtered_data()
-    show_graph(filtered, f"Life Expectancy by Country ({year_var.get()})")
-
-
-def show_selected():
-    selected = country_listbox.curselection()
-    if not selected:
-        return
-
-    selected_names = [country_listbox.get(i) for i in selected]
-    filtered = get_filtered_data()
-    filtered = filtered[filtered["Country"].isin(selected_names)]
-
-    show_graph(filtered, f"Selected Countries ({year_var.get()})")
-
-
-# ---------------- SEARCH FILTER ---------------- #
-
-def update_country_list(event=None):
-    search_term = search_var.get().lower()
-    country_listbox.delete(0, tk.END)
-
-    filtered = df[df["Year"] == int(year_var.get())]["Country"].unique()
-
-    for country in sorted(filtered):
-        if search_term in country.lower():
-            country_listbox.insert(tk.END, country)
-
-
-# ---------------- GUI ---------------- #
-
-root = tk.Tk()
-root.title("Life Expectancy Dashboard")
-root.geometry("1000x750")
-
-tk.Label(root, text="Life Expectancy Dashboard", font=("Arial", 18)).pack(pady=10)
-
-# --- Controls Frame ---
-controls = tk.Frame(root)
-controls.pack(pady=5)
-
-# Year Selector
-tk.Label(controls, text="Select Year:").grid(row=0, column=0)
-year_var = tk.StringVar(value=str(years[-1]))
-year_menu = ttk.Combobox(controls, textvariable=year_var, values=years, width=8)
-year_menu.grid(row=0, column=1)
-year_menu.bind("<<ComboboxSelected>>", update_country_list)
-
-# Sort Selector
-tk.Label(controls, text="Sort:").grid(row=0, column=2)
-sort_var = tk.StringVar(value="Highest to Lowest")
-sort_menu = ttk.Combobox(
-    controls,
-    textvariable=sort_var,
-    values=["Highest to Lowest", "Lowest to Highest"],
-    width=20
-)
-sort_menu.grid(row=0, column=3)
-
-# Search Bar
-tk.Label(controls, text="Search Country:").grid(row=0, column=4)
-search_var = tk.StringVar()
-search_entry = tk.Entry(controls, textvariable=search_var)
-search_entry.grid(row=0, column=5)
-search_entry.bind("<KeyRelease>", update_country_list)
-
-# --- Buttons ---
-btn_frame = tk.Frame(root)
-btn_frame.pack(pady=10)
-
-tk.Button(btn_frame, text="Show All Countries", command=show_all).pack(side="left", padx=5)
-tk.Button(btn_frame, text="Show Selected Countries", command=show_selected).pack(side="left", padx=5)
-
-# --- Country List ---
-list_frame = tk.Frame(root)
-list_frame.pack(pady=10)
-
-scrollbar = tk.Scrollbar(list_frame)
-scrollbar.pack(side="right", fill="y")
-
-country_listbox = tk.Listbox(
-    list_frame,
-    width=45,
-    height=15,
-    selectmode="multiple",
-    yscrollcommand=scrollbar.set
-)
-
-scrollbar.config(command=country_listbox.yview)
-country_listbox.pack(side="left")
-
-update_country_list()
-
-# --- Scrollable Graph Area ---
-graph_frame = tk.Frame(root)
-graph_frame.pack(fill="both", expand=True)
-
-graph_canvas = tk.Canvas(graph_frame, bg="white")
-graph_canvas.pack(side="left", fill="both", expand=True)
-
-graph_scroll = tk.Scrollbar(graph_frame, orient="vertical", command=graph_canvas.yview)
-graph_scroll.pack(side="right", fill="y")
-
-graph_canvas.config(yscrollcommand=graph_scroll.set)
-
-root.mainloop()
+        self.graph_canvas.delete("all")
+        self.graph_canvas.image = img
+        self.graph_canvas.create_image(0, 0, anchor="nw", image=img)
