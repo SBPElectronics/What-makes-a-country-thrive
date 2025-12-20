@@ -3,6 +3,7 @@ from tkinter import ttk, Menu
 from data_downloader import PopulationApp  # Import both apps
 from life import life_expectancy_app  # Import life expectancy app
 from explore import open_dataset  # Import the function from explore.py
+from compare_datasets import open_dataset  # Import the function from compare_datasets.py
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -21,14 +22,14 @@ class TheDataAnalyser:
         self.root.config(menu=menubar) 
 
         helpMenu = Menu(menubar, tearoff=0) 
-        helpMenu.add_command(label="About")
+        helpMenu.add_command(label="About", command=self.about_info)
         helpMenu.add_command(label="Check For Updates")
         menubar.add_cascade(label="Help", menu=helpMenu)
 
         collaboratorMenu = Menu(menubar, tearoff=0)
-        collaboratorMenu.add_command(label="hum-projects")
-        collaboratorMenu.add_command(label="SBPElectronics")
-        collaboratorMenu.add_command(label="MAHPROJECTS")
+        collaboratorMenu.add_command(label="hum-projects", command=self.hum_projects_info)
+        collaboratorMenu.add_command(label="SBPElectronics", command=self.sbp_electronics_info)
+        collaboratorMenu.add_command(label="MAHPROJECTS", command=self.mahprojects_info)
         menubar.add_cascade(label="Contributors", menu=collaboratorMenu)
 
         # Main frame for buttons
@@ -69,6 +70,15 @@ class TheDataAnalyser:
         )
         self.life_expectancy_button.pack(fill="x", expand=True)
 
+        self.compare_datasets_button = tk.Button(
+            self.main_frame,
+            text="Compare Datasets",
+            bg="green",
+            fg="black",
+            command=self.open_compare_datasets_app
+        )
+        self.compare_datasets_button.pack(fill="x", expand=True)
+
         # Pass 'root' when calling open_dataset
         self.dataset_button = tk.Button(self.main_frame, text="Open Dataset", command=lambda: open_dataset(root),
                                         bg="green",
@@ -86,6 +96,65 @@ class TheDataAnalyser:
     def open_life_expectancy_app(self):
         new_window = tk.Toplevel(self.root)
         life_expectancy_app(new_window)
+    
+    def open_compare_datasets_app(self):
+        new_window = tk.Toplevel(self.root)
+        Title = tk.Label(new_window, text="Pick your datasets", font=("Arial", 16))
+        Title.pack(pady=10)
+        CompareLabel = tk.Label(new_window, text="This feature is coming soon!", font=("Arial", 12))
+        CompareLabel.pack(pady=10)
+
+    def about_info(self):
+        about_window = tk.Toplevel(self.root)
+        about_window.title("About The Global Data Analyzer")
+        about_window.geometry("600x200")
+        about_label = tk.Label(
+            about_window,
+            text=(
+                "The Global Data Analyzer\n"
+                "Version 1.0\n\n"
+                
+                "This application is to show people how countries' data changes over time and can be used to analyze trends.\n"
+                "Developed by the collaborative efforts of hum-projects, SBPElectronics, and MAHPROJECTS.\n\n"
+            ),
+            justify="left",
+            padx=10,
+            pady=10
+        )
+        about_label.pack(fill="both", expand=True)
+
+    def hum_projects_info(self):
+        hum_window = tk.Toplevel(self.root)
+        hum_window.title("About hum-projects")
+        hum_window.geometry("600x200")
+        hum_label = tk.Label(hum_window, text="hum-projects is a collaborative effort to create open-source software solutions." \
+        ,
+                             justify="left", padx=10, pady=10)
+        hum_label.pack(fill="both", expand=True)
+        hum_label2=tk.Label(hum_window, text="https://github.com/hum-projects",justify="left", padx=10, pady=10)
+        hum_label2.pack(fill="both", expand=True)
+
+    def sbp_electronics_info(self):
+        saleem_window = tk.Toplevel(self.root)
+        saleem_window.title("About SBPElectronics")
+        saleem_window.geometry("600x200")
+        saleem_label = tk.Label(saleem_window, text="SBPElectronics is an elite programmer with high level project on his github page. Also check out his channel" \
+        ,
+                                justify="left", padx=10, pady=10)
+        saleem_label.pack(fill="both", expand=True)
+        saleem_label2=tk.Label(saleem_window, text="https://github.com/SBPElectronics or https://www.youtube.com/@SBPElectronics",justify="left", padx=10, pady=10)
+        saleem_label2.pack(fill="both", expand=True)
+
+    def mahprojects_info(self):
+        mah_window = tk.Toplevel(self.root)
+        mah_window.title("About MAHPROJECTS")
+        mah_window.geometry("600x200")
+        mah_label = tk.Label(mah_window, text="MAHPROJECTS is dedicated to developing innovative software solutions for data analysis and visualization." \
+        ,
+                             justify="left", padx=10, pady=10)
+        mah_label2=tk.Label(mah_window, text="https://github.com/MAHPROJECTS",justify="left", padx=10, pady=10)
+        mah_label.pack(fill="both", expand=True)
+        mah_label2.pack(fill="both", expand=True)
 
 
 class BothDataApp:
