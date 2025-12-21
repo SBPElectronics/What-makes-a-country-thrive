@@ -3,7 +3,7 @@ from tkinter import ttk, Menu
 from data_downloader import PopulationApp  # Import both apps
 from life import life_expectancy_app  # Import life expectancy app
 from explore import open_dataset  # Import the function from explore.py
-from compare_datasets import open_dataset  # Import the function from compare_datasets.py
+from comparedatasets import open_dataset  # Import the function from compare_datasets.py
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
@@ -75,9 +75,10 @@ class TheDataAnalyser:
             text="Compare Datasets",
             bg="green",
             fg="black",
-            command=self.open_compare_datasets_app
+            command=lambda: open_dataset(self.root)
         )
         self.compare_datasets_button.pack(fill="x", expand=True)
+
 
         # Pass 'root' when calling open_dataset
         self.dataset_button = tk.Button(self.main_frame, text="Open Dataset", command=lambda: open_dataset(root),
