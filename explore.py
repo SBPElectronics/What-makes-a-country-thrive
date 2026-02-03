@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import filedialog, ttk, messagebox
 import pandas as pd
 
-def open_dataset(parent):
+def open_dataset1(parent):
     # Open file dialog to select a dataset
     file_path = filedialog.askopenfilename(title="Select Dataset",
                                            filetypes=[("CSV Files", "*.csv"), ("Excel Files", "*.xlsx")])

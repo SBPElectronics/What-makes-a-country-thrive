@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, Menu
 from data_downloader import PopulationApp  # Import both apps
 from life import life_expectancy_app  # Import life expectancy app
-from explore import open_dataset  # Import the function from explore.py
+from explore import open_dataset1  # Import the function from explore.py
 from comparedatasets import open_dataset  # Import the function from compare_datasets.py
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
@@ -81,7 +81,7 @@ class TheDataAnalyser:
 
 
         # Pass 'root' when calling open_dataset
-        self.dataset_button = tk.Button(self.main_frame, text="Open Dataset", command=lambda: open_dataset(root),
+        self.dataset_button = tk.Button(self.main_frame, text="Open Dataset", command=lambda: open_dataset1(root),
                                         bg="green",
                                         fg="black",)
         self.dataset_button.pack(fill = 'x', expand=True)
@@ -168,7 +168,7 @@ class BothDataApp:
         # Frame to hold widgets
         self.main_frame = ttk.Frame(self.root, padding="10")
         self.main_frame.pack(fill="both", expand=True)
-
+    
         # Country selection input
         self.country_label = tk.Label(self.main_frame, text="Select a Country:")
         self.country_label.pack(pady=5)
