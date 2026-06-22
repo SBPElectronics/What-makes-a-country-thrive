@@ -2,15 +2,13 @@ import tkinter as tk
 from tkinter import ttk
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_agg import FigureCanvasAgg
-from PIL import Image, ImageTk
-import io
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class life_expectancy_app:
     def __init__(self, root):
         self.root = root
         self.root.title("Life Expectancy Dashboard")
-        self.root.geometry("1000x750")
+        self.root.geometry("1000x500")
 
         self.df = pd.read_csv("life.csv")
         self.df.columns = self.df.columns.str.strip()
@@ -29,7 +27,10 @@ class life_expectancy_app:
         self.sort_var = tk.StringVar(value="Highest to Lowest")
         self.search_var = tk.StringVar()
 
+        tk.Label(controls, text="Year:").grid(row=0, column=0, padx=5)
         ttk.Combobox(controls, textvariable=self.year_var, values=self.years, width=8).grid(row=0, column=1)
+
+        tk.Label(controls, text="Sort:").grid(row=0, column=2, padx=5)
         ttk.Combobox(
             controls,
             textvariable=self.sort_var,
@@ -37,6 +38,7 @@ class life_expectancy_app:
             width=20
         ).grid(row=0, column=3)
 
+        tk.Label(controls, text="Search:").grid(row=0, column=4, padx=5)
         self.search_entry = tk.Entry(controls, textvariable=self.search_var)
         self.search_entry.grid(row=0, column=5)
         self.search_entry.bind("<KeyRelease>", self.update_country_list)
@@ -44,22 +46,30 @@ class life_expectancy_app:
         self.country_listbox = tk.Listbox(self.root, width=45, height=15, selectmode="multiple")
         self.country_listbox.pack(pady=10)
 
-        tk.Button(self.root, text="Show All Countries", command=self.show_all).pack()
-        tk.Button(self.root, text="Show Selected Countries", command=self.show_selected).pack()
-
-        self.graph_canvas = tk.Canvas(self.root, bg="white")
-        self.graph_canvas.pack(fill="both", expand=True)
+        tk.Button(self.root, text="Show All Countries", command=self.show_all).pack(pady=3)
+        tk.Button(self.root, text="Show Selected Countries", command=self.show_selected).pack(pady=3)
 
     def get_filtered_data(self):
         year = int(self.year_var.get())
         filtered = self.df[self.df["Year"] == year]
+        sort_mode = self.sort_var.get()
 
-        if self.sort_var.get() == "Lowest to Highest":
-            filtered = filtered.sort_values("Life expectancy")
-        else:
+        if sort_mode == "Highest to Lowest":
+            filtered = filtered.sort_values("Life expectancy", ascending=True)
+        elif sort_mode == "Lowest to Highest":
             filtered = filtered.sort_values("Life expectancy", ascending=False)
 
         return filtered
+
+    def update_country_list(self, event=None):
+        self.country_listbox.delete(0, tk.END)
+        year = int(self.year_var.get())
+        countries = self.df[self.df["Year"] == year]["Country"].unique()
+        search_text = self.search_var.get().lower()
+
+        for c in sorted(countries):
+            if search_text in c.lower():
+                self.country_listbox.insert(tk.END, c)
 
     def show_all(self):
         self.show_graph(self.get_filtered_data(), "Life Expectancy by Country")
@@ -68,31 +78,45 @@ class life_expectancy_app:
         selected = self.country_listbox.curselection()
         if not selected:
             return
-
         names = [self.country_listbox.get(i) for i in selected]
         data = self.get_filtered_data()
         self.show_graph(data[data["Country"].isin(names)], "Selected Countries")
 
-    def update_country_list(self, event=None):
-        self.country_listbox.delete(0, tk.END)
-        year = int(self.year_var.get())
-        countries = self.df[self.df["Year"] == year]["Country"].unique()
-
-        for c in sorted(countries):
-            if self.search_var.get().lower() in c.lower():
-                self.country_listbox.insert(tk.END, c)
-
     def show_graph(self, data, title):
-        fig, ax = plt.subplots(figsize=(10, len(data) * 0.4))
+        if data.empty:
+            return
+
+        graph_window = tk.Toplevel(self.root)
+        graph_window.title(title)
+        graph_window.geometry("900x600")
+
+        graph_canvas = tk.Canvas(graph_window)
+        scrollbar = ttk.Scrollbar(graph_window, orient="vertical", command=graph_canvas.yview)
+        scrollable_frame = tk.Frame(graph_canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: graph_canvas.configure(scrollregion=graph_canvas.bbox("all"))
+        )
+
+        graph_canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        graph_canvas.configure(yscrollcommand=scrollbar.set)
+        graph_canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        height = max(6, len(data) * 0.25)
+        fig, ax = plt.subplots(figsize=(10, height))
         ax.barh(data["Country"], data["Life expectancy"])
         ax.set_title(title)
+        ax.tick_params(axis='y', labelsize=7)
+        plt.tight_layout()
 
-        buf = io.BytesIO()
-        FigureCanvasAgg(fig).print_png(buf)
-        buf.seek(0)
-        img = ImageTk.PhotoImage(Image.open(buf))
+        canvas = FigureCanvasTkAgg(fig, master=scrollable_frame)
+        canvas.draw()
+        canvas.get_tk_widget().pack(fill="both", expand=True)
         plt.close(fig)
 
-        self.graph_canvas.delete("all")
-        self.graph_canvas.image = img
-        self.graph_canvas.create_image(0, 0, anchor="nw", image=img)
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = life_expectancy_app(root)
+    root.mainloop()

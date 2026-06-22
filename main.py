@@ -53,7 +53,7 @@ class TheDataAnalyser:
         # Button to see both Population and GDP of a country
         self.both_data_button = tk.Button(
             self.main_frame,
-            text="See Both GDP and Population of a Country",
+            text="See Both GDP and Population of a Country (Needs working on)",
             bg="green",
             fg="black",
             command=self.open_both_data_app
@@ -63,7 +63,7 @@ class TheDataAnalyser:
         # Button to see Life Expectancy of a country
         self.life_expectancy_button = tk.Button(
             self.main_frame,
-            text="See Life Expectancy of a Country",
+            text="Compare the Life Expectancy of a Countries",
             bg="green",
             fg="black",
             command=self.open_life_expectancy_app
@@ -128,7 +128,7 @@ class TheDataAnalyser:
         hum_window = tk.Toplevel(self.root)
         hum_window.title("About hum-projects")
         hum_window.geometry("600x200")
-        hum_label = tk.Label(hum_window, text="hum-projects is a collaborative effort to create open-source software solutions." \
+        hum_label = tk.Label(hum_window, text="hum-projects is a collaborative colleague helping to create open-source software solutions." \
         ,
                              justify="left", padx=10, pady=10)
         hum_label.pack(fill="both", expand=True)
@@ -139,7 +139,7 @@ class TheDataAnalyser:
         saleem_window = tk.Toplevel(self.root)
         saleem_window.title("About SBPElectronics")
         saleem_window.geometry("600x200")
-        saleem_label = tk.Label(saleem_window, text="SBPElectronics is an elite programmer with high level project on his github page. Also check out his channel" \
+        saleem_label = tk.Label(saleem_window, text="SBPElectronics is an elite programmer with high level projects on his github page. Also check out his channel" \
         ,
                                 justify="left", padx=10, pady=10)
         saleem_label.pack(fill="both", expand=True)
