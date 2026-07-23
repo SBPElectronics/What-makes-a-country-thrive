@@ -11,7 +11,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 # -----------------------
 # Load Environment Variables
-# -----------------------
+# ----------------------
 load_dotenv()
 
 email = "user"
